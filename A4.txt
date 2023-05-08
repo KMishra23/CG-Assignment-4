@@ -1,0 +1,8 @@
+CG Assignment 4
+
+Team: RedGear
+Kaushik Mishra IMT2020137
+Karanveer Singh IMT2020099
+Vaibhav Thapliyal IMT202049
+
+Github link for submission: https://github.com/KMishra23/CG-Assignment-4
