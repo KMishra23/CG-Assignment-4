@@ -82,7 +82,7 @@ bigSphereMesh.position.set(39, 2.5, 0)
 // bigSphereMesh.castShadow = true;
 
 var floorPlane = new THREE.Mesh(floorPlaneGeo, planeMaterial)
-floorPlane.position.set(0, -60, 0)
+floorPlane.position.set(0, -70, 0)
 floorPlane.rotation.set(3*Math.PI/2, 0, 0)
 // floorPlane.receiveShadow = true;
 // floorPlane.castShadow = true;
@@ -109,7 +109,6 @@ pointLightShadowHelper.visible = true;
 
 
 scene.add(lightMesh)
-
 scene.add(ambLight)
 // scene.add(spotLight)
 scene.add(pl1)
@@ -140,15 +139,15 @@ catapultRotationPoint.attach(bigSphereMesh)
 scene.add(catapultRotationPoint)
 
 // function walls() {
-    var wall1 = addWall(200, 0x5461ab) //lightBlue
-    wall1.position.set(20, -60, 0)
+    var wall1 = addWall(240, 0x5461ab) //lightBlue
+    wall1.position.set(40, -60, 0)
     wall1.rotation.z = Math.PI/2
     // wall1.rotation.z = Math.PI/180*10
     
     wall1.geometry.computeBoundingBox()
    
     var wall2 = addWall(150, 0x6600ff) //blue
-    wall2.position.set(120, 10, 0)
+    wall2.position.set(160, 10, 0)
     // wall2.rotation.z = Math.PI/180*(-10)
    
     wall2.geometry.computeBoundingBox()
@@ -182,6 +181,17 @@ bboxButton1.copy(button1.geometry.boundingBox).applyMatrix4(button1.matrixWorld)
 var button1Helper = new THREE.Box3Helper(bboxButton1)
 scene.add(button1Helper)
 
+var button2 = new THREE.Mesh(buttonGeo, buttonMaterial)
+button2.rotation.z = Math.PI/2 
+button2.position.set(158.5,-56.5,0)
+wall2.attach(button2)
+
+var bboxButton2 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
+button2.geometry.computeBoundingBox()
+bboxButton2.copy(button2.geometry.boundingBox).applyMatrix4(button2.matrixWorld)
+var button2Helper = new THREE.Box3Helper(bboxButton2)
+scene.add(button2Helper)
+
 var restoreButton1 = button1.position
 
 
@@ -204,10 +214,14 @@ bboxPiston1.copy(phead1.geometry.boundingBox).applyMatrix4(phead1.matrixWorld)
 var piston1Helper = new THREE.Box3Helper(bboxPiston1)
 scene.add(piston1Helper)
 
+
 var phead2 = new THREE.Mesh(pistonHeadGeo, pistonMaterial)
 var pneck2 = new THREE.Mesh(pistonNeck, pistonMaterial)
 phead2.add(pneck2)
 pneck2.position.set(-3,0,0)
+phead2.position.set(162,-62,0)
+phead2.rotation.z = Math.PI/180 * 120
+scene.add(phead2)
 
 var bboxPiston2 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
 phead2.geometry.computeBoundingBox()
@@ -215,7 +229,7 @@ bboxPiston2.copy(phead2.geometry.boundingBox).applyMatrix4(phead2.matrixWorld)
 var piston2Helper = new THREE.Box3Helper(bboxPiston2)
 scene.add(piston2Helper)
 
-scene.add(phead2)
+
 
 // }
 // walls()
@@ -256,11 +270,18 @@ var catapultCurrAcc = 0
 var ballState = "OnCatapult"
 var ballX = 0
 var ballY = 0
+const ballXL1 = -0.35
+const ballYL1 = 0.1
+const ballXL2 = -0.3
+const ballYL2 = 0.74
 var ballXAfterLaunch = -0.35
 var ballYAfterLaunch = 0.1
+var ballXAfterLaunch2 = -0.3
+var ballYAfterLaunch2 = 0.74
 var gravity = -0.003
 
 var piston1State = "Inactive"
+var piston2State = "Inactive"
 
 const box = new THREE.Box3Helper(bboxCatapult, 0xffff00)
 scene.add(box)
@@ -311,11 +332,15 @@ function animate() {
     bboxSphere.copy(bigSphereMesh.geometry.boundingBox).applyMatrix4(bigSphereMesh.matrixWorld)
     bboxButton1.copy(button1.geometry.boundingBox).applyMatrix4(button1.matrixWorld)
     bboxPiston1.copy(phead1.geometry.boundingBox).applyMatrix4(phead1.matrixWorld)
+    bboxButton2.copy(button2.geometry.boundingBox).applyMatrix4(button2.matrixWorld)
+    bboxPiston2.copy(phead2.geometry.boundingBox).applyMatrix4(phead2.matrixWorld)
+    // bboxPiston2.setFromObject(phead2)
 
     if(!pause) {
         launchCatapultAnimationLoop()
         moveBall()
-        moveHorizontalPiston()
+        movePiston1()
+        movePiston2()
     }
 	
     control.update();
@@ -338,7 +363,7 @@ function createCatapult() {
     var handleMesh = new THREE.Mesh(handleGeo, catapultMaterial)
     var cupMesh = new THREE.Mesh(cupGeo, catapultMaterial)
     var bottomCapMesh = new THREE.Mesh(bottomCapGeo, catapultMaterial)
-
+    
     handleMesh.add(cupMesh)
     cupMesh.add(bottomCapMesh)
 
@@ -386,7 +411,6 @@ function addTube(l1, l2, radius, color) {
     return tube;
 }
 
-
 function launchCatapultAnimationLoop() {
     var currAngle = Math.round(catapultRotationPoint.rotation.z * 180/Math.PI)
     // console.log(currAngle)
@@ -401,7 +425,7 @@ function launchCatapultAnimationLoop() {
 
         launchState = "WaitAfterRelease"
     }
-    else if(currAngle == -20 && launchState == "ReelBack") { //reached max point preparing for launch
+    else if(currAngle == 0 && launchState == "ReelBack") { //reached max point preparing for launch
         // console.log("waiting for relaunch")
         catapultCurrAcc = 0
         launchState = "WaitForCommand"
@@ -430,12 +454,12 @@ function launchCatapultAnimationLoop() {
     // console.log(t.setFromMatrixPosition(catapultRotationPoint.matrixWorld))
 }
 
-function moveHorizontalPiston() {
+function movePiston1() {
     if(piston1State == "ButtonPressed") { //reel piston back
-        piston1State = "Reelback"
+        piston1State = "ReelBack"
         setTimeout(launchPiston1, 1000)
     }
-    else if(piston1State == "Reelback") {
+    else if(piston1State == "ReelBack") {
         phead1.position.x -= 0.1
     }
     else if(piston1State == "Launch") {
@@ -448,6 +472,24 @@ function launchPiston1() {
     piston1State = "Launch"
 }
 
+function movePiston2() {
+    if(piston2State == "ButtonPressed") {
+        piston2State = "ReelBack"
+        setTimeout(launchPiston2, 1000)
+    }
+    else if(piston2State == "ReelBack") {
+        phead2.position.y -= 0.05
+        phead2.position.x += 0.05
+    }
+    else if(piston2State == "Launch") {
+        phead2.position.y += 0.5
+        phead2.position.x -= 0.5
+    }
+}
+
+function launchPiston2() {
+    piston2State = "Launch" 
+}
 
 function moveBall() {
 
@@ -474,26 +516,38 @@ function moveBall() {
         
     }
     else if(ballState == "RollingOnPlatform") {
+        bigSphereMesh.position.x -= ballXAfterLaunch*3
+    }
+    else if(ballState == "HitButton2") {
         bigSphereMesh.position.x -= ballXAfterLaunch
+        button2.position.x -= ballXAfterLaunch
+    }
+    else if(ballState == "OnVerticalPlatform") {
+
+    }
+    else if(ballState == "GoingUp") {
+        bigSphereMesh.position.x += ballXAfterLaunch2
+        bigSphereMesh.position.y += ballYAfterLaunch2
+        ballYAfterLaunch2 += gravity 
     }
 }
 
 function collisionChecker() {
-    if(tubeP2.intersectsBox(bboxSphere) && ballState != "InsideTube1") {
+    if(tubeP2.intersectsBox(bboxSphere) && ballState != "InsideTube1") { //ball goes into tube on left
         console.log("Hit wall of tube1")
         ballState = "InsideTube1"
         bigSphereMesh.position.x = -44
     }
-    else if(bboxButton1.intersectsBox(bboxSphere) && ballState != "HitButton1" && ballState != "OnLowerPlatform" && ballState != "RollingOnPlatform") {
+    else if(bboxButton1.intersectsBox(bboxSphere) && ballState == "InsideTube1" ) { //ball falls out of tube and presses button
         console.log("Hit Button 1")
         piston1State = "ButtonPressed"
         ballState = "HitButton1"
     }
-    else if(bboxWall1.intersectsBox(bboxSphere) && ballState != "OnLowerPlatform" && ballState != "RollingOnPlatform") {
-        console.log("Hit red platform")
+    else if(bboxWall1.intersectsBox(bboxSphere) && ballState == "HitButton1") { //ball is on button, waiting to be hit
+        console.log("Hit horizontal platform")
         ballState = "OnLowerPlatform"
     }
-    else if(bboxPiston1.intersectsBox(bboxSphere) && piston1State == "Launch" && ballState != "RollingOnPlatform") {
+    else if(bboxPiston1.intersectsBox(bboxSphere) && piston1State == "Launch" && ballState != "RollingOnPlatform") { //ball gets hit by piston, reset piston position
         console.log("Hit Ball with piston")
         // button1.position.set(restoreButton1)
         setTimeout(resetButton1, 2000)
@@ -501,14 +555,47 @@ function collisionChecker() {
         phead1.position.x -= 5
         ballState = "RollingOnPlatform"
     }
+    else if(bboxButton2.intersectsBox(bboxSphere) && ballState == "RollingOnPlatform"){ //ball moves and hits 2nd button
+        console.log("Hit Button 2")
+        piston2State = "ButtonPressed"
+        ballState = "HitButton2"
+    }
+    else if(bboxWall2.intersectsBox(bboxSphere) && ballState == "HitButton2") { //ball is on button, waiting to be hit
+        console.log("Hit vertical platform")
+        ballState = "OnVerticalPlatform"
+    }
+    else if(bboxPiston2.containsPoint(new THREE.Vector3(158, -57, 0)) && ballState == "OnVerticalPlatform") { //ball gets hit by piston, launch upwards
+        console.log("Hit ball upwards")
+        setTimeout(resetButton2, 2000)
+        ballState = "GoingUp"
+        piston2State = "Inactive"
+        phead2.position.y -= 5
+        phead2.position.x += 5
+    }
+    else if(bboxCatapult.intersectsBox(bboxSphere) && ballState == "GoingUp") { //Latch ball to the catapult
+        console.log("Starting loop again")
+
+        ballXAfterLaunch = ballXL1
+        ballXAfterLaunch2 = ballXL2
+        ballYAfterLaunch = ballYL1
+        ballYAfterLaunch2 = ballYL2
+
+        ballState = "onCatapult"
+        catapultRotationPoint.attach(bigSphereMesh)
+    }
 }
 
 function resetButton1() {
     // scene.attach(button1)
-    console.log(restoreButton1.x)
-    button1.position.set(resetButton1.x, restoreButton1.y, restoreButton1.z)
+    // console.log(restoreButton1.x)
+    button1.position.x += 1.5
     // button1.scale.set(100,100,100)
     // wall1.attach(button1)
+}
+
+function resetButton2() {
+    // console.log
+    button2.position.x -= 0.5
 }
 
 function reloadCatapult() {
