@@ -230,9 +230,6 @@ document.addEventListener('keydown', event => {
     if(event.key == "p") {
         pause = !pause
     }
-    if(event.key == "o") {
-        console.log(piston1State)
-    }
     if(event.key == "1") {
         point = !point
         if(point) scene.add(pl1)
