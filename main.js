@@ -20,7 +20,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000)
 const camera = new THREE.PerspectiveCamera(30, window.innerWidth/ window.innerHeight, 0.1, 10000);
 const trackingCamera = new THREE.PerspectiveCamera(30, window.innerWidth/ window.innerHeight, 0.1, 1000);
-// scene.add(new THREE.CameraHelper(trackingCamera))
+
 camera.position.z = 270;
 camera.position.y = 50;
 // camera.lookAt(new THREE.Vector3(0, 0, -10))
@@ -183,13 +183,16 @@ var bboxSphere = createBoundingBox3(bigSphereMesh)
 // scene.add(new THREE.Box3Helper(bboxPiston1))
 // scene.add(new THREE.Box3Helper(bboxPiston2))
 
+// scene.add(new THREE.CameraHelper(trackingCamera))
+
 
 var currentCamera = camera
 var currentScene = scene
 var control = new TrackballControls(camera, renderer.domElement)
 
-var moveFlag = 1
-var launchState = "WaitForCommand"
+// var moveFlag = 1
+
+var catapultState = "WaitForCommand"
 var catapultForwardAcc = 2
 var catapultBackwardAcc = -0.5
 var catapultCurrAcc = 0
@@ -218,9 +221,13 @@ var spot = true
 var ambient = true
 var cam = true
 
+var trackingCameraAngle = Math.PI/180 * 0
+var trackingCameraUpX = Math.cos(trackingCameraAngle)
+var trackingCameraUpZ = Math.sin(trackingCameraAngle)
+
 document.addEventListener('keydown', event => {
-    if(event.key == "l" && launchState == "WaitForCommand") {
-        launchState = "Release"
+    if(event.key == "l" && catapultState == "WaitForCommand") {
+        catapultState = "Release"
     }
     if(event.key == "p") {
         pause = !pause
@@ -257,6 +264,18 @@ document.addEventListener('keydown', event => {
             currentCamera = trackingCamera
         }
     }
+    if(event.key == "-") {
+        trackingCameraAngle -= Math.PI/180
+        var trackingCameraUpX = Math.cos(trackingCameraAngle)
+        var trackingCameraUpZ = Math.sin(trackingCameraAngle)
+        trackingCamera.up.set(trackingCameraUpX,0,trackingCameraUpZ)
+    }
+    if(event.key == "=") {
+        trackingCameraAngle += Math.PI/180
+        var trackingCameraUpX = Math.cos(trackingCameraAngle)
+        var trackingCameraUpZ = Math.sin(trackingCameraAngle)
+        trackingCamera.up.set(trackingCameraUpX,0,trackingCameraUpZ)
+    }
 })
 
 function animate() {
@@ -288,11 +307,13 @@ function animate() {
         movePiston2()
     }
 	if(cam) control.update();
-    else if(!cam) {
+    // else if(!cam) {
         var t = new THREE.Vector3().setFromMatrixPosition(bigSphereMesh.matrixWorld)
         trackingCamera.position.set(t.x, 100, 0)
-        trackingCamera.lookAt(t)
-    }
+        trackingCamera.lookAt(t)  
+        console.log(trackingCamera.up)
+        
+    // }
 
 	renderer.render( currentScene, currentCamera );
 }
@@ -302,44 +323,38 @@ animate();
 function launchCatapultAnimationLoop() {
     var currAngle = Math.round(catapultRotationPoint.rotation.z * 180/Math.PI)
     // console.log(currAngle)
-    if((currAngle == 60 || currAngle == 61) && launchState == "Release") { // reached max point for launch, launch ball
+    if((currAngle == 60 || currAngle == 61) && catapultState == "Release") { // reached max point for launch, launch ball
         console.log("launched")
         catapultCurrAcc = 0
 
         ballState = "Launched"
-        // catapultRotationPoint.remove(bigSphereMesh)
-        // bigSphereMesh.matrixWorld.decompose(bigSphereMesh.position, bigSphereMesh.quaternion, bigSphereMesh.scale)
         scene.attach(bigSphereMesh)
 
-        launchState = "WaitAfterRelease"
+        catapultState = "WaitAfterRelease"
     }
-    else if(currAngle == 0 && launchState == "ReelBack") { //reached max point preparing for launch
+    else if(currAngle == 0 && catapultState == "ReelBack") { //reached max point preparing for launch
         // console.log("waiting for relaunch")
         catapultCurrAcc = 0
-        launchState = "WaitForCommand"
+        catapultState = "WaitForCommand"
     }
 
-    if(launchState == "Release") { //lauching the catapult
+    if(catapultState == "Release") { //lauching the catapult
         catapultCurrAcc = catapultForwardAcc;
     }
-    else if(launchState == "WaitAfterRelease") { //wait a bit before moving again
+    else if(catapultState == "WaitAfterRelease") { //wait a bit before moving again
         catapultCurrAcc = 0
-        launchState = "WaitAfterRelease2"
+        catapultState = "WaitAfterRelease2"
         // console.log("Waiting")
         setTimeout(reloadCatapult, 1000)
     }
-    else if(launchState == "ReelBack") { //Reel back the catapult
+    else if(catapultState == "ReelBack") { //Reel back the catapult
         catapultCurrAcc = catapultBackwardAcc   
     }
-    else if(launchState == "WaitForCommand") { //waiting to launch catapult
+    else if(catapultState == "WaitForCommand") { //waiting to launch catapult
         catapultCurrAcc = 0
     }
 
     catapultRotationPoint.rotation.z += catapultCurrAcc*Math.PI/180
-    // console.log(catapultRotationPoint.matrixWorld)
-    var t = new THREE.Vector3()
-    // console.log(t.setFromMatrixPosition(catapultClass.children[0].matrixWorld))
-    // console.log(t.setFromMatrixPosition(catapultRotationPoint.matrixWorld))
 }
 
 function movePiston1() {
@@ -356,7 +371,6 @@ function movePiston1() {
 }
 
 function launchPiston1() {
-    console.log("eh")
     piston1State = "Launch"
 }
 
@@ -388,8 +402,6 @@ function moveBall() {
         //apply parabolic motion
         bigSphereMesh.position.x += ballXAfterLaunch
         bigSphereMesh.position.y += ballYAfterLaunch
-        // bigSphereMesh.position.x = -40
-        // bigSphereMesh.position.y -= 0.2
         ballYAfterLaunch += gravity
     }
     else if(ballState == "InsideTube1") {
@@ -474,19 +486,13 @@ function collisionChecker() {
 }
 
 function resetButton1() {
-    // scene.attach(button1)
-    // console.log(restoreButton1.x)
     button1.position.x += 1.5
-    // button1.scale.set(100,100,100)
-    // wall1.attach(button1)
 }
 
 function resetButton2() {
-    // console.log
     button2.position.x -= 0.5
 }
 
 function reloadCatapult() {
-    // console.log("Exe")
-    launchState = "ReelBack"
+    catapultState = "ReelBack"
 }
