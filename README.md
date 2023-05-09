@@ -13,7 +13,7 @@ About the animation: The project has 4 working parts. A ball, a catapult and two
 4. Ball pushes the first button and as it does, the first piston starts to reel back.
 5. After 1sec, the piston moves forward at high speed and hits the ball. The ball starts moving on the floor.
 6. The ball hits another button and is subsequently launched upwards by another piston.
-7. The ball lands back into the catapult and can be launched again by pressing 'l'.
+7. The ball lands back into the catapult and can be launched again by pressing 'L'.
 
 Keyboard Inputs:
 1. Press 'P' to pause the animation at any given moment.

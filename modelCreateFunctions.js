@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+const woodTex = new THREE.TextureLoader().load('index2.jpeg')
+
 export function createWall(height, color) {
     var wallGeo = new THREE.BoxGeometry(2, height, 6)
     var wallMaterial = new THREE.MeshPhongMaterial({
@@ -7,6 +9,8 @@ export function createWall(height, color) {
         shininess: 1,
         side: THREE.DoubleSide
     })
+
+    wallMaterial.map = woodTex
 
     var wall = new THREE.Mesh(wallGeo, wallMaterial)
 

@@ -25,7 +25,12 @@ camera.position.z = 270;
 camera.position.y = 50;
 // camera.lookAt(new THREE.Vector3(0, 0, -10))
 
-var cubeGeo = new THREE.BoxGeometry(10,10,10)
+const texLoader = new THREE.TextureLoader()
+const tex1 = texLoader.load('index.jpeg')
+const woodTex = texLoader.load('index2.jpeg')
+const greenTex = texLoader.load('green.jpg')
+
+// var cubeGeo = new THREE.BoxGeometry(10,10,10)
 var bigSphereGeo = new THREE.SphereGeometry(2, 30, 30)
 var floorPlaneGeo = new THREE.PlaneGeometry(1000,1000)
 var lightSphereGeo = new THREE.SphereGeometry(1, 30, 30)
@@ -38,19 +43,13 @@ var lightMaterial = new THREE.MeshPhongMaterial({
     emissive: 0xffffff,
     side: THREE.BackSide    
 })
-var phongMaterial2 = new THREE.MeshPhongMaterial({
-    color: 0xdb3c24,
-    specular: 0x5e5c64,
-    shininess: 1,
-    side: THREE.DoubleSide
-
-})
 var phongMaterialBigSpehere = new THREE.MeshPhongMaterial({
     color: 0xed96ea,
     specular: 0x5e5c64,
     shininess: 5, 
     side: THREE.DoubleSide
 })
+phongMaterialBigSpehere.map = tex1
 var planeMaterial = new THREE.MeshPhongMaterial({
     color: 0x615761,
     shininess: 1
@@ -60,6 +59,7 @@ var tubeMaterial = new THREE.MeshPhongMaterial({
     color: 0x3bd12e,
     side: THREE.DoubleSide
 })
+tubeMaterial.map = greenTex
 
 var tubeMesh = new THREE.Mesh(cylGeo, tubeMaterial)
 tubeMesh.position.set(-43, -15, 0)
