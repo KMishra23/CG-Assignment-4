@@ -6,10 +6,8 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as dat from 'https://cdn.skypack.dev/dat.gui';
 import { AxesHelper, Vector2 } from 'three';
-
-// function createPivot(color1, color2) {
-
-// }
+import { createWall, createCatapult, createButton, createPiston } from './modelCreateFunctions';
+import { createBoundingBox3 } from './bboxCreateFunctions';
 
 const renderer = new THREE.WebGLRenderer({
     alpha: true,
@@ -22,10 +20,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000)
 const camera = new THREE.PerspectiveCamera(30, window.innerWidth/ window.innerHeight, 0.1, 10000);
 const trackingCamera = new THREE.PerspectiveCamera(30, window.innerWidth/ window.innerHeight, 0.1, 1000);
-// trackingCamera.position.set(0,100,0)
-// trackingCamera.lookAt(0, -100, 0)
-// trackingCamera.add(new THREE.AxesHelper(5))
-scene.add(new THREE.CameraHelper(trackingCamera))
+// scene.add(new THREE.CameraHelper(trackingCamera))
 camera.position.z = 270;
 camera.position.y = 50;
 // camera.lookAt(new THREE.Vector3(0, 0, -10))
@@ -70,34 +65,23 @@ var tubeMesh = new THREE.Mesh(cylGeo, tubeMaterial)
 tubeMesh.position.set(-43, -15, 0)
 scene.add(tubeMesh)
 
+var bboxTube = new THREE.Box3(new THREE.Vector3(-48.5,-40,-5), new THREE.Vector3(-48.5,10,5))
 
-var tubeP2 = new THREE.Box3(new THREE.Vector3(-48.5,-40,-5), new THREE.Vector3(-48.5,10,5))
-var p2Helper = new THREE.Box3Helper(tubeP2)
-scene.add(p2Helper)
 
-var cubeMesh = new THREE.Mesh(cubeGeo, phongMaterial2)
-cubeMesh.position.set(0, 10, 0)
-// cubeMesh.receiveShadow = true;
-// cubeMesh.castShadow = true;
+// var cubeMesh = new THREE.Mesh(cubeGeo, phongMaterial2)
+// cubeMesh.position.set(0, 10, 0)
 
 var bigSphereMesh = new THREE.Mesh(bigSphereGeo, phongMaterialBigSpehere)
 bigSphereMesh.position.set(39, 2.5, 0)
-// bigSphereMesh.receiveShadow = true;
-// bigSphereMesh.castShadow = true;
 
 var floorPlane = new THREE.Mesh(floorPlaneGeo, planeMaterial)
 floorPlane.position.set(0, -70, 0)
 floorPlane.rotation.set(3*Math.PI/2, 0, 0)
-// floorPlane.receiveShadow = true;
-// floorPlane.castShadow = true;
 
 
 var pointLightPos = [100, 100, 0];
 
 var ambLight = new THREE.AmbientLight(0x808080)
-
-// var spotLight = new THREE.SpotLight(0xffffff, 1, 0, Math.PI/4)
-// spotLight.position.set(pointLightPos[0], pointLightPos[1], pointLightPos[2])
 
 var lightMesh = new THREE.Mesh(lightSphereGeo, lightMaterial)
 lightMesh.position.set(pointLightPos[0], pointLightPos[1], pointLightPos[2])
@@ -113,16 +97,11 @@ spl1.position.set(0, 100, 0)
 spl1.target = bigSphereMesh
 spl1.position.x = bigSphereMesh.position.x
 
+scene.add(pl1)
 scene.add(spl1)
 scene.add(dl1)
 scene.add(lightMesh)
 scene.add(ambLight)
-// scene.add(spotLight)
-scene.add(pl1)
-
-// cubeMesh.add(bigSphereMesh)
-// bigSphereMesh.parent = cubeMesh
-// console.log(cubeMesh.children)
 
 // scene.add(cubeMesh)
 scene.add(bigSphereMesh)
@@ -137,125 +116,73 @@ catapultRotationPoint.add(catapultClass);
 catapultClass.position.set(20, 0, 0);
 catapultRotationPoint.rotation.z = Math.PI/180 * 0
 
-// var tube = addTube(20, 20, 5, 0x3bd12e)
-// tube.position.set(-20, 0, 0)
-// scene.add(tube)
-
 // catapultRotationPoint.add(bigSphereMesh)
 catapultRotationPoint.attach(bigSphereMesh)
 scene.add(catapultRotationPoint)
 
-    var wall1 = addWall(240, 0x5461ab) //lightBlue
-    wall1.position.set(40, -60, 0)
-    wall1.rotation.z = Math.PI/2
-    // wall1.rotation.z = Math.PI/180*10
-    
-    wall1.geometry.computeBoundingBox()
+var wall1 = createWall(240, 0x5461ab) //lightBlue
+wall1.position.set(40, -60, 0)
+wall1.rotation.z = Math.PI/2
+// wall1.rotation.z = Math.PI/180*10
    
-    var wall2 = addWall(150, 0x6600ff) //blue
-    wall2.position.set(160, 10, 0)
-    // wall2.rotation.z = Math.PI/180*(-10)
-   
-    wall2.geometry.computeBoundingBox()
+var wall2 = createWall(150, 0x6600ff) //blue
+wall2.position.set(160, 10, 0)
+// wall2.rotation.z = Math.PI/180*(-10)
 
-    scene.add(wall1)
-    scene.add(wall2)
+scene.add(wall1)
+scene.add(wall2)
 
-    var bboxWall1 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-    bboxWall1.setFromObject(wall1)
-    var bboxWall2 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-    bboxWall2.setFromObject(wall2)
+var bboxWall1 = createBoundingBox3(wall1)
+var bboxWall2 = createBoundingBox3(wall2)
 
-    var wall1Helper = new THREE.Box3Helper(bboxWall1)
-    var wall2Helper = new THREE.Box3Helper(bboxWall2)
-    // scene.add(wall1Helper)
-    // scene.add(wall2Helper)
 
-var buttonGeo = new THREE.CylinderGeometry(2,2,1)
-var buttonMaterial = new THREE.MeshPhongMaterial({
-    color: 0xf4160b,
-    side: THREE.DoubleSide
-})
-var button1 = new THREE.Mesh(buttonGeo, buttonMaterial)
+var button1 = createButton(0xf4160b)
 // button1.rotation.z = Math.PI/2 
 button1.position.set(-44,-58.5,0)
 wall1.attach(button1)
 
-var bboxButton1 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-button1.geometry.computeBoundingBox()
-bboxButton1.setFromObject(button1)
-var button1Helper = new THREE.Box3Helper(bboxButton1)
-// scene.add(button1Helper)
-
-var button2 = new THREE.Mesh(buttonGeo, buttonMaterial)
+var button2 = createButton(0xf4160b)
 button2.rotation.z = Math.PI/2 
 button2.position.set(158.5,-56.5,0)
 wall2.attach(button2)
 
-var bboxButton2 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-button2.geometry.computeBoundingBox()
-bboxButton2.setFromObject(button2)
-var button2Helper = new THREE.Box3Helper(bboxButton2)
-// scene.add(button2Helper)
+var bboxButton1 = createBoundingBox3(button1) 
+var bboxButton2 = createBoundingBox3(button2)
 
-// var restoreButton1 = button1.position
-
-var pistonHeadGeo = new THREE.BoxGeometry(1,4,4)
-var pistonNeck = new THREE.BoxGeometry(6,1,1)
-var pistonMaterial = new THREE.MeshPhongMaterial({
-    color: 0x785100,
-    side: THREE.DoubleSide
-})
-var phead1 = new THREE.Mesh(pistonHeadGeo, pistonMaterial)
-var pneck1 = new THREE.Mesh(pistonNeck, pistonMaterial)
-phead1.add(pneck1)
-pneck1.position.set(-3,0,0)
+var phead1 = createPiston(0x785100)
 phead1.position.set(-48,-57,0)
-scene.add(phead1)
 
-var bboxPiston1 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-phead1.geometry.computeBoundingBox()
-bboxPiston1.setFromObject(phead1)
-var piston1Helper = new THREE.Box3Helper(bboxPiston1)
-// scene.add(piston1Helper)
-
-
-var phead2 = new THREE.Mesh(pistonHeadGeo, pistonMaterial)
-var pneck2 = new THREE.Mesh(pistonNeck, pistonMaterial)
-phead2.add(pneck2)
-pneck2.position.set(-3,0,0)
+var phead2 = createPiston(0x785100)
 phead2.position.set(162,-62,0)
 phead2.rotation.z = Math.PI/180 * 120
+
+scene.add(phead1)
 scene.add(phead2)
 
-var bboxPiston2 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-phead2.geometry.computeBoundingBox()
-bboxPiston2.copy(phead2.geometry.boundingBox).applyMatrix4(phead2.matrixWorld)
-var piston2Helper = new THREE.Box3Helper(bboxPiston2)
-// scene.add(piston2Helper)
+var bboxPiston1 = createBoundingBox3(phead1)
+var bboxPiston2 = createBoundingBox3(phead2)
+
+var bboxCatapult = createBoundingBox3(catapultClass)
+var bboxSphere = createBoundingBox3(bigSphereMesh)
 
 
-var bboxCatapult = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-// bboxCatapult.setFromObject(catapultClass)
-catapultClass.geometry.computeBoundingBox()
-bboxCatapult.copy(catapultClass.geometry.boundingBox).applyMatrix4(catapultClass.matrixWorld)
-// console.log(bboxCatapult)
 
-// cubeMesh.rotation.z = Math.PI/4 
-var bboxCube = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-bboxCube.setFromObject(cubeMesh)
-// var obboxCube = new OBB().fromBox3(bboxCube)
+                                                            /* ALL BOUDING BOX HELPERS ENABLE FROM HERE */
 
-// console.log(bboxCube)
+// scene.add(new THREE.Box3Helper(bboxSphere))
 
-var bboxSphere = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-bigSphereMesh.geometry.computeBoundingBox()
-bboxSphere.copy(bigSphereMesh.geometry.boundingBox)
-var sphereHelper = new THREE.Box3Helper(bboxSphere)
-// scene.add(sphereHelper)
+// scene.add(new THREE.Box3Helper(bboxCatapult, 0xffff00))
+// scene.add(new THREE.Box3Helper(bboxTube))
 
-// renderer.shadowMap.enabled = true
-// renderer.shadowMap.type = THREE.BasicShadowMap;
+// scene.add(new THREE.Box3Helper(bboxWall1))
+// scene.add(new THREE.Box3Helper(bboxWall2))
+
+// scene.add(new THREE.Box3Helper(bboxButton1))
+// scene.add(new THREE.Box3Helper(bboxButton2))
+
+// scene.add(new THREE.Box3Helper(bboxPiston1))
+// scene.add(new THREE.Box3Helper(bboxPiston2))
+
 
 var currentCamera = camera
 var currentScene = scene
@@ -283,11 +210,6 @@ var gravity = -0.003
 var piston1State = "Inactive"
 var piston2State = "Inactive"
 
-const box = new THREE.Box3Helper(bboxCatapult, 0xffff00)
-// scene.add(box)
-
-// const box2 = new THREE.Box3Helper(bboxCube, 0xffff00)
-// scene.add(box2)
 
 var pause = false
 var point = true
@@ -337,33 +259,10 @@ document.addEventListener('keydown', event => {
     }
 })
 
-// bigSphereMesh.add(trackingCamera)
-trackingCamera.position.set(0, 100, 0)
-
-// console.log(cubeMesh.matrixWorld)
-
 function animate() {
     requestAnimationFrame( animate );
 
-    // if(cubeMesh.position.x == 100) {
-    //     moveFlag=1
-    // }
-    // else if(cubeMesh.position.x == -50){
-    //     moveFlag=-1
-    // }
-    // cubeMesh.position.x -= 0.5*moveFlag
-    // cubeMesh.rotation.z += Math.PI/180
-    // console.log(cubeMesh.matrixWorld)
-
-    // bigSphereMesh.position.x += 0.5*moveFlag
-
-    // catapultRotationPoint.rotation.z += Math.PI/180 * 1
-
     // Update bounding box locations
-    // cubeMesh.geometry.computeBoundingBox()
-    // bboxCube.copy(cubeMesh.geometry.boundingBox).applyMatrix4(cubeMesh.matrixWorld)
-    // catapultClass.geometry.computeBoundingBox()
-
     bboxCatapult.copy(catapultClass.geometry.boundingBox).applyMatrix4(catapultClass.matrixWorld)
     bboxSphere.copy(bigSphereMesh.geometry.boundingBox).applyMatrix4(bigSphereMesh.matrixWorld)
     bboxButton1.copy(button1.geometry.boundingBox).applyMatrix4(button1.matrixWorld)
@@ -389,77 +288,16 @@ function animate() {
         movePiston2()
     }
 	if(cam) control.update();
-    var t = new THREE.Vector3().setFromMatrixPosition(bigSphereMesh.matrixWorld)
-    trackingCamera.position.set(t.x, 100, 0)
-    trackingCamera.lookAt(t)
+    else if(!cam) {
+        var t = new THREE.Vector3().setFromMatrixPosition(bigSphereMesh.matrixWorld)
+        trackingCamera.position.set(t.x, 100, 0)
+        trackingCamera.lookAt(t)
+    }
 
 	renderer.render( currentScene, currentCamera );
 }
 animate();
 
-function createCatapult() {
-    var handleGeo = new THREE.BoxGeometry(40, 1, 4)
-    var cupGeo = new THREE.CylinderGeometry(2, 6, 5, 32, 1, true);
-    var bottomCapGeo = new THREE.CircleGeometry(2, 32);
-
-    var catapultMaterial = new THREE.MeshPhongMaterial({
-        color: 0xc68a45,
-        specular: 0xe5c9a9,
-        shininess: 5,
-        side: THREE.DoubleSide
-    })
-
-    var handleMesh = new THREE.Mesh(handleGeo, catapultMaterial)
-    var cupMesh = new THREE.Mesh(cupGeo, catapultMaterial)
-    var bottomCapMesh = new THREE.Mesh(bottomCapGeo, catapultMaterial)
-    
-    handleMesh.add(cupMesh)
-    cupMesh.add(bottomCapMesh)
-
-    handleMesh.rotation.set(0, 0, Math.PI)
-
-    cupMesh.position.set(19, -3, 0)
-
-    bottomCapMesh.rotation.set(Math.PI/2, 0, 0)
-    bottomCapMesh.position.set(0, 2.5, 0)
-
-    return handleMesh
-}
-
-function addWall(height, color) {
-    var wallGeo = new THREE.BoxGeometry(2, height, 6)
-    var wallMaterial = new THREE.MeshPhongMaterial({
-        color: color,
-        shininess: 1,
-        side: THREE.DoubleSide
-    })
-
-    var wall = new THREE.Mesh(wallGeo, wallMaterial)
-
-    return wall;
-}
-
-function addTube(l1, l2, radius, color) {
-    var tubeCyl1Geo = new THREE.CylinderGeometry(radius, radius+0.1, l1, 4, 1, true, Math.PI/4)
-    var tubeCyl2Geo = new THREE.CylinderGeometry(radius, radius-0.1, l2, 4, 1, true, Math.PI/4)
-    var tubeMaterial = new THREE.MeshPhongMaterial({
-        color: color,
-        side: THREE.DoubleSide
-    })
-
-    var tube = new THREE.Group()
-
-    var tubeSec1 = new THREE.Mesh(tubeCyl1Geo, tubeMaterial)
-    var tubeSec2 = new THREE.Mesh(tubeCyl2Geo, tubeMaterial)
-    tube.add(tubeSec1)
-    tube.add(tubeSec2)
-
-    tubeSec2.rotation.z = Math.PI/2
-    tubeSec2.position.x += 1.5*radius 
-    tubeSec2.position.y -= l1/2 - radius
-
-    return tube;
-}
 
 function launchCatapultAnimationLoop() {
     var currAngle = Math.round(catapultRotationPoint.rotation.z * 180/Math.PI)
@@ -583,7 +421,7 @@ function moveBall() {
 }
 
 function collisionChecker() {
-    if(tubeP2.intersectsBox(bboxSphere) && ballState != "InsideTube1") { //ball goes into tube on left
+    if(bboxTube.intersectsBox(bboxSphere) && ballState != "InsideTube1") { //ball goes into tube on left
         console.log("Hit wall of tube1")
         ballState = "InsideTube1"
         bigSphereMesh.position.x = -44
