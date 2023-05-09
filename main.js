@@ -222,8 +222,6 @@ var ambient = true
 var cam = true
 
 var trackingCameraAngle = Math.PI/180 * 0
-var trackingCameraUpX = Math.cos(trackingCameraAngle)
-var trackingCameraUpZ = Math.sin(trackingCameraAngle)
 
 document.addEventListener('keydown', event => {
     if(event.key == "l" && catapultState == "WaitForCommand") {
@@ -266,15 +264,11 @@ document.addEventListener('keydown', event => {
     }
     if(event.key == "-") {
         trackingCameraAngle -= Math.PI/180
-        var trackingCameraUpX = Math.cos(trackingCameraAngle)
-        var trackingCameraUpZ = Math.sin(trackingCameraAngle)
-        trackingCamera.up.set(trackingCameraUpX,0,trackingCameraUpZ)
+        trackingCamera.up.set(Math.sin(trackingCameraAngle),0,Math.cos(trackingCameraAngle))
     }
     if(event.key == "=") {
         trackingCameraAngle += Math.PI/180
-        var trackingCameraUpX = Math.cos(trackingCameraAngle)
-        var trackingCameraUpZ = Math.sin(trackingCameraAngle)
-        trackingCamera.up.set(trackingCameraUpX,0,trackingCameraUpZ)
+        trackingCamera.up.set(Math.sin(trackingCameraAngle),0,Math.cos(trackingCameraAngle))
     }
 })
 
@@ -307,13 +301,11 @@ function animate() {
         movePiston2()
     }
 	if(cam) control.update();
-    // else if(!cam) {
+    else if(!cam) {
         var t = new THREE.Vector3().setFromMatrixPosition(bigSphereMesh.matrixWorld)
         trackingCamera.position.set(t.x, 100, 0)
         trackingCamera.lookAt(t)  
-        console.log(trackingCamera.up)
-        
-    // }
+    }
 
 	renderer.render( currentScene, currentCamera );
 }
