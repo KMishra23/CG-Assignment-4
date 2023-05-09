@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { OBB } from 'three/addons/math/OBB.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as dat from 'https://cdn.skypack.dev/dat.gui';
+import { AxesHelper, Vector2 } from 'three';
 
 // function createPivot(color1, color2) {
 
@@ -19,6 +21,11 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000)
 const camera = new THREE.PerspectiveCamera(30, window.innerWidth/ window.innerHeight, 0.1, 10000);
+const trackingCamera = new THREE.PerspectiveCamera(30, window.innerWidth/ window.innerHeight, 0.1, 1000);
+// trackingCamera.position.set(0,100,0)
+// trackingCamera.lookAt(0, -100, 0)
+// trackingCamera.add(new THREE.AxesHelper(5))
+scene.add(new THREE.CameraHelper(trackingCamera))
 camera.position.z = 270;
 camera.position.y = 50;
 // camera.lookAt(new THREE.Vector3(0, 0, -10))
@@ -32,14 +39,14 @@ var cylGeo = new THREE.CylinderGeometry(8, 8, 50, 4, 1, true, Math.PI/4)
 var lightMaterial = new THREE.MeshPhongMaterial({
     color: 0xffffff,
     specular: 0xffffff,
-    shininess: 0xffffff,
+    shininess: 1,
     emissive: 0xffffff,
     side: THREE.BackSide    
 })
 var phongMaterial2 = new THREE.MeshPhongMaterial({
     color: 0xdb3c24,
     specular: 0x5e5c64,
-    shininess: 100,
+    shininess: 1,
     side: THREE.DoubleSide
 
 })
@@ -49,11 +56,12 @@ var phongMaterialBigSpehere = new THREE.MeshPhongMaterial({
     shininess: 5, 
     side: THREE.DoubleSide
 })
-var planeMaterial = new THREE.MeshLambertMaterial({
+var planeMaterial = new THREE.MeshPhongMaterial({
     color: 0x615761,
+    shininess: 1
     // side: THREE.DoubleSide
 })
-var tubeMaterial = new THREE.MeshLambertMaterial({
+var tubeMaterial = new THREE.MeshPhongMaterial({
     color: 0x3bd12e,
     side: THREE.DoubleSide
 })
@@ -62,10 +70,6 @@ var tubeMesh = new THREE.Mesh(cylGeo, tubeMaterial)
 tubeMesh.position.set(-43, -15, 0)
 scene.add(tubeMesh)
 
-// var tubeP1 = new THREE.Box3(new THREE.Vector3(0,-43,0), new THREE.Vector3(0, 20, 10))
-// tubeP1.setFromObject(tubeMesh)
-// var p1Helper = new THREE.Box3Helper(tubeP1)
-// scene.add(p1Helper)
 
 var tubeP2 = new THREE.Box3(new THREE.Vector3(-48.5,-40,-5), new THREE.Vector3(-48.5,10,5))
 var p2Helper = new THREE.Box3Helper(tubeP2)
@@ -88,14 +92,12 @@ floorPlane.rotation.set(3*Math.PI/2, 0, 0)
 // floorPlane.castShadow = true;
 
 
-
-var pointLightPos = [100, 50, 0];
+var pointLightPos = [100, 100, 0];
 
 var ambLight = new THREE.AmbientLight(0x808080)
 
-var spotLight = new THREE.SpotLight(0xffffff, 1, 0, Math.PI/4)
-spotLight.position.set(pointLightPos[0], pointLightPos[1], pointLightPos[2])
-
+// var spotLight = new THREE.SpotLight(0xffffff, 1, 0, Math.PI/4)
+// spotLight.position.set(pointLightPos[0], pointLightPos[1], pointLightPos[2])
 
 var lightMesh = new THREE.Mesh(lightSphereGeo, lightMaterial)
 lightMesh.position.set(pointLightPos[0], pointLightPos[1], pointLightPos[2])
@@ -103,11 +105,16 @@ lightMesh.position.set(pointLightPos[0], pointLightPos[1], pointLightPos[2])
 var pl1 = new THREE.PointLight(0xffffff, 1, 0)
 pl1.position.set(pointLightPos[0], pointLightPos[1], pointLightPos[2])
 
+var dl1 = new THREE.SpotLight(0xfcff00, 1, 0, Math.PI/3)
+dl1.position.set(0, 100, 0)
 
-var pointLightShadowHelper = new THREE.CameraHelper(pl1.shadow.camera)
-pointLightShadowHelper.visible = true;
+var spl1 = new THREE.SpotLight(0x00d3ff, 1, 0, Math.PI/8)
+spl1.position.set(0, 100, 0)
+spl1.target = bigSphereMesh
+spl1.position.x = bigSphereMesh.position.x
 
-
+scene.add(spl1)
+scene.add(dl1)
 scene.add(lightMesh)
 scene.add(ambLight)
 // scene.add(spotLight)
@@ -127,18 +134,17 @@ catapultClass.rotation.y = Math.PI;
 
 var catapultRotationPoint = new THREE.Group()
 catapultRotationPoint.add(catapultClass);
-catapultClass.position.set(20, 0, 0)
+catapultClass.position.set(20, 0, 0);
 catapultRotationPoint.rotation.z = Math.PI/180 * 0
 
-var tube = addTube(20, 20, 5, 0x3bd12e)
-tube.position.set(-20, 0, 0)
+// var tube = addTube(20, 20, 5, 0x3bd12e)
+// tube.position.set(-20, 0, 0)
 // scene.add(tube)
 
 // catapultRotationPoint.add(bigSphereMesh)
 catapultRotationPoint.attach(bigSphereMesh)
 scene.add(catapultRotationPoint)
 
-// function walls() {
     var wall1 = addWall(240, 0x5461ab) //lightBlue
     wall1.position.set(40, -60, 0)
     wall1.rotation.z = Math.PI/2
@@ -162,11 +168,11 @@ scene.add(catapultRotationPoint)
 
     var wall1Helper = new THREE.Box3Helper(bboxWall1)
     var wall2Helper = new THREE.Box3Helper(bboxWall2)
-    scene.add(wall1Helper)
-    scene.add(wall2Helper)
+    // scene.add(wall1Helper)
+    // scene.add(wall2Helper)
 
 var buttonGeo = new THREE.CylinderGeometry(2,2,1)
-var buttonMaterial = new THREE.MeshLambertMaterial({
+var buttonMaterial = new THREE.MeshPhongMaterial({
     color: 0xf4160b,
     side: THREE.DoubleSide
 })
@@ -177,9 +183,9 @@ wall1.attach(button1)
 
 var bboxButton1 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
 button1.geometry.computeBoundingBox()
-bboxButton1.copy(button1.geometry.boundingBox).applyMatrix4(button1.matrixWorld)
+bboxButton1.setFromObject(button1)
 var button1Helper = new THREE.Box3Helper(bboxButton1)
-scene.add(button1Helper)
+// scene.add(button1Helper)
 
 var button2 = new THREE.Mesh(buttonGeo, buttonMaterial)
 button2.rotation.z = Math.PI/2 
@@ -188,16 +194,15 @@ wall2.attach(button2)
 
 var bboxButton2 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
 button2.geometry.computeBoundingBox()
-bboxButton2.copy(button2.geometry.boundingBox).applyMatrix4(button2.matrixWorld)
+bboxButton2.setFromObject(button2)
 var button2Helper = new THREE.Box3Helper(bboxButton2)
-scene.add(button2Helper)
+// scene.add(button2Helper)
 
-var restoreButton1 = button1.position
-
+// var restoreButton1 = button1.position
 
 var pistonHeadGeo = new THREE.BoxGeometry(1,4,4)
 var pistonNeck = new THREE.BoxGeometry(6,1,1)
-var pistonMaterial = new THREE.MeshLambertMaterial({
+var pistonMaterial = new THREE.MeshPhongMaterial({
     color: 0x785100,
     side: THREE.DoubleSide
 })
@@ -210,9 +215,9 @@ scene.add(phead1)
 
 var bboxPiston1 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
 phead1.geometry.computeBoundingBox()
-bboxPiston1.copy(phead1.geometry.boundingBox).applyMatrix4(phead1.matrixWorld)
+bboxPiston1.setFromObject(phead1)
 var piston1Helper = new THREE.Box3Helper(bboxPiston1)
-scene.add(piston1Helper)
+// scene.add(piston1Helper)
 
 
 var phead2 = new THREE.Mesh(pistonHeadGeo, pistonMaterial)
@@ -227,12 +232,7 @@ var bboxPiston2 = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
 phead2.geometry.computeBoundingBox()
 bboxPiston2.copy(phead2.geometry.boundingBox).applyMatrix4(phead2.matrixWorld)
 var piston2Helper = new THREE.Box3Helper(bboxPiston2)
-scene.add(piston2Helper)
-
-
-
-// }
-// walls()
+// scene.add(piston2Helper)
 
 
 var bboxCatapult = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
@@ -252,14 +252,14 @@ var bboxSphere = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
 bigSphereMesh.geometry.computeBoundingBox()
 bboxSphere.copy(bigSphereMesh.geometry.boundingBox)
 var sphereHelper = new THREE.Box3Helper(bboxSphere)
-scene.add(sphereHelper)
+// scene.add(sphereHelper)
 
 // renderer.shadowMap.enabled = true
 // renderer.shadowMap.type = THREE.BasicShadowMap;
 
 var currentCamera = camera
 var currentScene = scene
-var control = new OrbitControls(currentCamera, renderer.domElement)
+var control = new TrackballControls(camera, renderer.domElement)
 
 var moveFlag = 1
 var launchState = "WaitForCommand"
@@ -284,12 +284,17 @@ var piston1State = "Inactive"
 var piston2State = "Inactive"
 
 const box = new THREE.Box3Helper(bboxCatapult, 0xffff00)
-scene.add(box)
+// scene.add(box)
 
 // const box2 = new THREE.Box3Helper(bboxCube, 0xffff00)
 // scene.add(box2)
 
 var pause = false
+var point = true
+var directional = true
+var spot = true
+var ambient = true
+var cam = true
 
 document.addEventListener('keydown', event => {
     if(event.key == "l" && launchState == "WaitForCommand") {
@@ -301,14 +306,44 @@ document.addEventListener('keydown', event => {
     if(event.key == "o") {
         console.log(piston1State)
     }
+    if(event.key == "1") {
+        point = !point
+        if(point) scene.add(pl1)
+        else scene.remove(pl1)
+    }
+    if(event.key == "2") {
+        directional = !directional
+        if(directional) scene.add(dl1)
+        else scene.remove(dl1)
+    }
+    if(event.key == "3") {
+        spot = !spot
+        if(spot) scene.add(spl1)
+        else scene.remove(spl1)
+    }
+    if(event.key == "4") {
+        ambient = !ambient
+        if(ambient) scene.add(ambLight)
+        else scene.remove(ambLight)
+    }
+    if(event.key == "c") {
+        cam = !cam
+        if(cam) {
+            currentCamera = camera
+        }
+        else {
+            currentCamera = trackingCamera
+        }
+    }
 })
 
-console.log(cubeMesh.matrixWorld)
+// bigSphereMesh.add(trackingCamera)
+trackingCamera.position.set(0, 100, 0)
+
+// console.log(cubeMesh.matrixWorld)
 
 function animate() {
     requestAnimationFrame( animate );
-
-    collisionChecker()
 
     // if(cubeMesh.position.x == 100) {
     //     moveFlag=1
@@ -327,14 +362,25 @@ function animate() {
     // Update bounding box locations
     // cubeMesh.geometry.computeBoundingBox()
     // bboxCube.copy(cubeMesh.geometry.boundingBox).applyMatrix4(cubeMesh.matrixWorld)
-    catapultClass.geometry.computeBoundingBox()
+    // catapultClass.geometry.computeBoundingBox()
+
     bboxCatapult.copy(catapultClass.geometry.boundingBox).applyMatrix4(catapultClass.matrixWorld)
     bboxSphere.copy(bigSphereMesh.geometry.boundingBox).applyMatrix4(bigSphereMesh.matrixWorld)
     bboxButton1.copy(button1.geometry.boundingBox).applyMatrix4(button1.matrixWorld)
     bboxPiston1.copy(phead1.geometry.boundingBox).applyMatrix4(phead1.matrixWorld)
     bboxButton2.copy(button2.geometry.boundingBox).applyMatrix4(button2.matrixWorld)
     bboxPiston2.copy(phead2.geometry.boundingBox).applyMatrix4(phead2.matrixWorld)
+
+    collisionChecker()
+
     // bboxPiston2.setFromObject(phead2)
+
+    // if(spot) {
+        // spl1.position.x = bigSphereMesh.position.x
+        // var t = new THREE.Vector3().setFromMatrixPosition(bigSphereMesh.matrixWorld)
+        // spl1.position.x = t.x
+        // console.log(t)
+    // }
 
     if(!pause) {
         launchCatapultAnimationLoop()
@@ -342,15 +388,18 @@ function animate() {
         movePiston1()
         movePiston2()
     }
-	
-    control.update();
+	if(cam) control.update();
+    var t = new THREE.Vector3().setFromMatrixPosition(bigSphereMesh.matrixWorld)
+    trackingCamera.position.set(t.x, 100, 0)
+    trackingCamera.lookAt(t)
+
 	renderer.render( currentScene, currentCamera );
 }
 animate();
 
 function createCatapult() {
     var handleGeo = new THREE.BoxGeometry(40, 1, 4)
-    var cupGeo = new THREE.CylinderGeometry(2, 6, 5, 4, 1, true);
+    var cupGeo = new THREE.CylinderGeometry(2, 6, 5, 32, 1, true);
     var bottomCapGeo = new THREE.CircleGeometry(2, 32);
 
     var catapultMaterial = new THREE.MeshPhongMaterial({
@@ -379,8 +428,9 @@ function createCatapult() {
 
 function addWall(height, color) {
     var wallGeo = new THREE.BoxGeometry(2, height, 6)
-    var wallMaterial = new THREE.MeshLambertMaterial({
+    var wallMaterial = new THREE.MeshPhongMaterial({
         color: color,
+        shininess: 1,
         side: THREE.DoubleSide
     })
 
@@ -392,7 +442,7 @@ function addWall(height, color) {
 function addTube(l1, l2, radius, color) {
     var tubeCyl1Geo = new THREE.CylinderGeometry(radius, radius+0.1, l1, 4, 1, true, Math.PI/4)
     var tubeCyl2Geo = new THREE.CylinderGeometry(radius, radius-0.1, l2, 4, 1, true, Math.PI/4)
-    var tubeMaterial = new THREE.MeshLambertMaterial({
+    var tubeMaterial = new THREE.MeshPhongMaterial({
         color: color,
         side: THREE.DoubleSide
     })
@@ -547,7 +597,7 @@ function collisionChecker() {
         console.log("Hit horizontal platform")
         ballState = "OnLowerPlatform"
     }
-    else if(bboxPiston1.intersectsBox(bboxSphere) && piston1State == "Launch" && ballState != "RollingOnPlatform") { //ball gets hit by piston, reset piston position
+    else if(bboxPiston1.intersectsBox(bboxSphere) && piston1State == "Launch" && ballState == "OnLowerPlatform") { //ball gets hit by piston, reset piston position
         console.log("Hit Ball with piston")
         // button1.position.set(restoreButton1)
         setTimeout(resetButton1, 2000)
